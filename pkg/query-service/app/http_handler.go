@@ -327,7 +327,11 @@ func (aH *APIHandler) Respond(w http.ResponseWriter, data interface{}) {
 // RegisterPrivateRoutes registers routes for this handler on the given router
 func (aH *APIHandler) RegisterPrivateRoutes(router *mux.Router) {
 	router.HandleFunc("/api/v1/channels", aH.listChannels).Methods(http.MethodGet)
+
 	router.HandleFunc("/api/v3/query_range", aH.QueryRangeV3).Methods(http.MethodPost)
+	router.HandleFunc("/api/v1/dashboards", aH.getDashboards).Methods(http.MethodGet)
+	router.HandleFunc("/api/v1/dashboards", aH.createDashboards).Methods(http.MethodPost)
+	router.HandleFunc("/api/v1/dashboards/{uuid}", aH.deleteDashboard).Methods(http.MethodDelete)
 }
 
 // RegisterRoutes registers routes for this handler on the given router
