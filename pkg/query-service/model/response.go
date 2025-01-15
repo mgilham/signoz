@@ -689,4 +689,5 @@ type GetVersionResponse struct {
 	Version        string `json:"version"`
 	EE             string `json:"ee"`
 	SetupCompleted bool   `json:"setupCompleted"`
+	HeaderEmail    string `json:"headerEmail"`
 }
