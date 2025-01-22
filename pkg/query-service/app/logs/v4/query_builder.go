@@ -34,6 +34,8 @@ const (
 	BODY                         = "body"
 	DISTRIBUTED_LOGS_V2          = "distributed_logs_v2"
 	DISTRIBUTED_LOGS_V2_RESOURCE = "distributed_logs_v2_resource"
+	LOGS_VIEW                    = "logs_view"
+	LOGS_RESOURCE_VIEW           = "logs_resource_view"
 	DB_NAME                      = "signoz_logs"
 	NANOSECOND                   = 1000000000
 )
@@ -287,12 +289,14 @@ func generateAggregateClause(aggOp v3.AggregateOperator,
 	step int64,
 	preferRPM bool,
 	timeFilter string,
+	bucketStart int64,
+	bucketEnd int64,
 	whereClause string,
 	groupBy string,
 	having string,
 	orderBy string,
 ) (string, error) {
-	queryTmpl := " %s as value from signoz_logs." + DISTRIBUTED_LOGS_V2 +
+	queryTmpl := " %s as value from signoz_logs." + logsView("TODO", bucketStart, bucketEnd) +
 		" where " + timeFilter + "%s" +
 		"%s%s" +
 		"%s"
@@ -349,6 +353,10 @@ func generateAggregateClause(aggOp v3.AggregateOperator,
 	}
 }
 
+func logsView(tenant string, bucketStartSeconds, bucketEndSeconds int64) string {
+	return fmt.Sprintf("%s (tenant='%s', window_start='%d', window_end='%d')", LOGS_VIEW, tenant, bucketStartSeconds, bucketEndSeconds)
+}
+
 func buildLogsQuery(panelType v3.PanelType, start, end, step int64, mq *v3.BuilderQuery, graphLimitQtype string, preferRPM bool) (string, error) {
 	// timerange will be sent in epoch millisecond
 	logsStart := utils.GetEpochNanoSecs(start)
@@ -359,7 +367,7 @@ func buildLogsQuery(panelType v3.PanelType, start, end, step int64, mq *v3.Build
 	bucketEnd := logsEnd / NANOSECOND
 
 	// timestamp filter , bucket_start filter is added for primary key
-	timeFilter := fmt.Sprintf("(timestamp >= %d AND timestamp <= %d) AND (ts_bucket_start >= %d AND ts_bucket_start <= %d)", logsStart, logsEnd, bucketStart, bucketEnd)
+	timeFilter := fmt.Sprintf("(timestamp >= %d AND timestamp <= %d)", logsStart, logsEnd)
 
 	// build the where clause for main table
 	filterSubQuery, err := buildLogsTimeSeriesFilterQuery(mq.Filters, mq.GroupBy, mq.AggregateAttribute)
@@ -394,7 +402,7 @@ func buildLogsQuery(panelType v3.PanelType, start, end, step int64, mq *v3.Build
 		// with noop any filter or different order by other than ts will use new table
 		sqlSelect := constants.LogsSQLSelectV2
 		queryTmpl := sqlSelect + "from signoz_logs.%s where %s%s order by %s"
-		query := fmt.Sprintf(queryTmpl, DISTRIBUTED_LOGS_V2, timeFilter, filterSubQuery, orderBy)
+		query := fmt.Sprintf(queryTmpl, logsView("TODO", bucketStart, bucketEnd), timeFilter, filterSubQuery, orderBy)
 		return query, nil
 		// ---- NOOP ends here ----
 	}
@@ -425,7 +433,7 @@ func buildLogsQuery(panelType v3.PanelType, start, end, step int64, mq *v3.Build
 		filterSubQuery = filterSubQuery + " AND " + fmt.Sprintf("(%s) GLOBAL IN (", logsV3.GetSelectKeys(mq.AggregateOperator, mq.GroupBy)) + "#LIMIT_PLACEHOLDER)"
 	}
 
-	aggClause, err := generateAggregateClause(mq.AggregateOperator, aggregationKey, step, preferRPM, timeFilter, filterSubQuery, groupBy, having, orderBy)
+	aggClause, err := generateAggregateClause(mq.AggregateOperator, aggregationKey, step, preferRPM, timeFilter, bucketStart, bucketEnd, filterSubQuery, groupBy, having, orderBy)
 	if err != nil {
 		return "", err
 	}
@@ -476,7 +484,7 @@ func buildLogsLiveTailQuery(mq *v3.BuilderQuery) (string, error) {
 	// the reader will add the timestamp and id filters
 	switch mq.AggregateOperator {
 	case v3.AggregateOperatorNoOp:
-		query := constants.LogsSQLSelectV2 + "from signoz_logs." + DISTRIBUTED_LOGS_V2 + " where "
+		query := constants.LogsSQLSelectV2 + "from signoz_logs." + logsView("TODO", 0, 0) + " where "
 		if len(filterSubQuery) > 0 {
 			query = query + filterSubQuery + " AND "
 		}

@@ -110,6 +110,7 @@ func NewQuerier(opts QuerierOptions) interfaces.Querier {
 // execClickHouseQuery executes the clickhouse query and returns the series list
 // if testing mode is enabled, it returns the mocked series list
 func (q *querier) execClickHouseQuery(ctx context.Context, query string) ([]*v3.Series, error) {
+	zap.L().Info("query : " + query)
 	if q.testingMode && q.reader == nil {
 		q.queriesExecuted = append(q.queriesExecuted, query)
 		return q.returnedSeries, q.returnedErr
