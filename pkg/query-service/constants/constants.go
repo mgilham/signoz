@@ -240,6 +240,7 @@ const (
 	SIGNOZ_TRACE_DBNAME                        = "signoz_traces"
 	SIGNOZ_SPAN_INDEX_TABLENAME                = "distributed_signoz_index_v2"
 	SIGNOZ_SPAN_INDEX_V3                       = "distributed_signoz_index_v3"
+	SIGNOZ_INDEX_VIEW                          = "signoz_index_view"
 	SIGNOZ_SPAN_INDEX_LOCAL_TABLENAME          = "signoz_index_v2"
 	SIGNOZ_SPAN_INDEX_V3_LOCAL_TABLENAME       = "signoz_index_v3"
 	SIGNOZ_TIMESERIES_v4_LOCAL_TABLENAME       = "time_series_v4"
