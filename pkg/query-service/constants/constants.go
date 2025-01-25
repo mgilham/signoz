@@ -253,6 +253,7 @@ const (
 const (
 	TENANT_LOGS_VIEW          = "logs_view"
 	TENANT_LOGS_RESOURCE_VIEW = "logs_resource_view"
+	TENANT_LOGS_TAG_ATTR_VIEW = "tag_attributes_tenant_view"
 
 	TENANT_TRACES_INDEX_VIEW       = "signoz_index_view"
 	TENANT_TRACES_INDEX_RES_VIEW   = "signoz_index_resource_view"

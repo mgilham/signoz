@@ -3691,7 +3691,7 @@ func (r *ClickHouseReader) GetLogAggregateAttributes(ctx context.Context, req *v
 		return nil, fmt.Errorf("unsupported aggregate operator")
 	}
 
-	query = fmt.Sprintf("SELECT DISTINCT(tag_key), tag_type, tag_data_type from %s.%s WHERE %s limit $2", r.logsDB, r.logsTagAttributeTableV2, where)
+	query = fmt.Sprintf("SELECT DISTINCT(tag_key), tag_type, tag_data_type from %s.%s WHERE %s limit $2", r.logsDB, attributeTagView("TODO"), where)
 	rows, err = r.db.Query(ctx, query, fmt.Sprintf("%%%s%%", req.SearchText), req.Limit)
 	if err != nil {
 		zap.L().Error("Error while executing query", zap.Error(err))
@@ -3740,10 +3740,10 @@ func (r *ClickHouseReader) GetLogAttributeKeys(ctx context.Context, req *v3.Filt
 	var response v3.FilterAttributeKeyResponse
 
 	if len(req.SearchText) != 0 {
-		query = fmt.Sprintf("select distinct tag_key, tag_type, tag_data_type from  %s.%s where tag_key ILIKE $1 limit $2", r.logsDB, r.logsTagAttributeTableV2)
+		query = fmt.Sprintf("select distinct tag_key, tag_type, tag_data_type from  %s.%s where tag_key ILIKE $1 limit $2", r.logsDB, attributeTagView("TODO"))
 		rows, err = r.db.Query(ctx, query, fmt.Sprintf("%%%s%%", req.SearchText), req.Limit)
 	} else {
-		query = fmt.Sprintf("select distinct tag_key, tag_type, tag_data_type from  %s.%s limit $1", r.logsDB, r.logsTagAttributeTableV2)
+		query = fmt.Sprintf("select distinct tag_key, tag_type, tag_data_type from  %s.%s limit $1", r.logsDB, attributeTagView("TODO"))
 		rows, err = r.db.Query(ctx, query, req.Limit)
 	}
 
@@ -3852,10 +3852,10 @@ func (r *ClickHouseReader) GetLogAttributeValues(ctx context.Context, req *v3.Fi
 		if req.FilterAttributeKeyDataType != v3.AttributeKeyDataTypeString {
 			filterValueColumnWhere = fmt.Sprintf("toString(%s)", filterValueColumn)
 		}
-		query = fmt.Sprintf("SELECT DISTINCT %s FROM %s.%s WHERE tag_key=$1 AND %s ILIKE $2 AND tag_type=$3 LIMIT $4", filterValueColumn, r.logsDB, r.logsTagAttributeTableV2, filterValueColumnWhere)
+		query = fmt.Sprintf("SELECT DISTINCT %s FROM %s.%s WHERE tag_key=$1 AND %s ILIKE $2 AND tag_type=$3 LIMIT $4", filterValueColumn, r.logsDB, attributeTagView("TODO"), filterValueColumnWhere)
 		rows, err = r.db.Query(ctx, query, req.FilterAttributeKey, searchText, req.TagType, req.Limit)
 	} else {
-		query = fmt.Sprintf("SELECT DISTINCT %s FROM %s.%s WHERE tag_key=$1 AND tag_type=$2 LIMIT $3", filterValueColumn, r.logsDB, r.logsTagAttributeTableV2)
+		query = fmt.Sprintf("SELECT DISTINCT %s FROM %s.%s WHERE tag_key=$1 AND tag_type=$2 LIMIT $3", filterValueColumn, r.logsDB, attributeTagView("TODO"))
 		rows, err = r.db.Query(ctx, query, req.FilterAttributeKey, req.TagType, req.Limit)
 	}
 

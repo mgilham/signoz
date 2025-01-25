@@ -176,7 +176,7 @@ func (r *ClickHouseReader) getValuesForLogAttributes(
 				string_value != '' or number_value is not null
 			)
 			limit %d
-		)`, r.logsDB, r.logsTagAttributeTableV2, idx+1, limit))
+		)`, r.logsDB, attributeTagView("TODO"), idx+1, limit))
 
 		tagKeyQueryArgs = append(tagKeyQueryArgs, attrib.Key)
 	}
