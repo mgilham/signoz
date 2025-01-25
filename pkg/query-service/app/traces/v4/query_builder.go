@@ -214,7 +214,7 @@ func orderByAttributeKeyTags(panelType v3.PanelType, items []v3.OrderBy, tags []
 }
 
 func tracesView(tenant string, bucketStartSeconds, bucketEndSeconds int64) string {
-	return fmt.Sprintf("%s (tenant='%s', window_start='%d', window_end='%d')", constants.SIGNOZ_INDEX_VIEW, tenant, bucketStartSeconds, bucketEndSeconds)
+	return fmt.Sprintf("%s (tenant='%s', window_start='%d', window_end='%d')", constants.TENANT_TRACES_INDEX_RES_VIEW, tenant, bucketStartSeconds, bucketEndSeconds)
 }
 
 func buildTracesQuery(start, end, step int64, mq *v3.BuilderQuery, panelType v3.PanelType, options v3.QBOptions) (string, error) {
@@ -389,8 +389,6 @@ func buildTracesQuery(start, end, step int64, mq *v3.BuilderQuery, panelType v3.
 	}
 }
 
-const useAliasesInViewSettings = " SETTINGS asterisk_include_alias_columns=1"
-
 // PrepareTracesQuery returns the query string for traces
 // start and end are in epoch millisecond
 // step is in seconds
@@ -409,13 +407,13 @@ func PrepareTracesQuery(start, end int64, panelType v3.PanelType, mq *v3.Builder
 		}
 		query = tracesV3.AddLimitToQuery(query, mq.Limit)
 
-		return query + useAliasesInViewSettings, nil
+		return query + constants.UseAliasesInViewSettings, nil
 	} else if options.GraphLimitQtype == constants.SecondQueryGraphLimit {
 		query, err := buildTracesQuery(start, end, mq.StepInterval, mq, panelType, options)
 		if err != nil {
 			return "", err
 		}
-		return query + useAliasesInViewSettings, nil
+		return query + constants.UseAliasesInViewSettings, nil
 	}
 
 	query, err := buildTracesQuery(start, end, mq.StepInterval, mq, panelType, options)
@@ -432,5 +430,5 @@ func PrepareTracesQuery(start, end int64, panelType v3.PanelType, mq *v3.Builder
 			query = tracesV3.AddOffsetToQuery(query, mq.Offset)
 		}
 	}
-	return query + useAliasesInViewSettings, err
+	return query + constants.UseAliasesInViewSettings, err
 }

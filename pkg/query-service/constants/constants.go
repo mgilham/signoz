@@ -240,7 +240,6 @@ const (
 	SIGNOZ_TRACE_DBNAME                        = "signoz_traces"
 	SIGNOZ_SPAN_INDEX_TABLENAME                = "distributed_signoz_index_v2"
 	SIGNOZ_SPAN_INDEX_V3                       = "distributed_signoz_index_v3"
-	SIGNOZ_INDEX_VIEW                          = "signoz_index_view"
 	SIGNOZ_SPAN_INDEX_LOCAL_TABLENAME          = "signoz_index_v2"
 	SIGNOZ_SPAN_INDEX_V3_LOCAL_TABLENAME       = "signoz_index_v3"
 	SIGNOZ_TIMESERIES_v4_LOCAL_TABLENAME       = "time_series_v4"
@@ -249,6 +248,20 @@ const (
 	SIGNOZ_TIMESERIES_v4_1DAY_LOCAL_TABLENAME  = "time_series_v4_1day"
 	SIGNOZ_TIMESERIES_v4_1WEEK_LOCAL_TABLENAME = "time_series_v4_1week"
 	SIGNOZ_TIMESERIES_v4_1DAY_TABLENAME        = "distributed_time_series_v4_1day"
+)
+
+const (
+	TENANT_LOGS_VIEW          = "logs_view"
+	TENANT_LOGS_RESOURCE_VIEW = "logs_resource_view"
+
+	TENANT_TRACES_INDEX_VIEW       = "signoz_index_view"
+	TENANT_TRACES_INDEX_RES_VIEW   = "signoz_index_resource_view"
+	TENANT_TRACES_ERROR_INDEX_VIEW = "signoz_error_index_view"
+	TENANT_TRACES_TL_OPS_VIEW      = "top_level_operations_view"
+	TENANT_TRACES_ATTR_KEYS_VIEW   = "span_attributes_keys_tenant_view"
+	TENANT_TRACES_TAG_ATTR_VEIW    = "tag_attributes_tenant_view"
+
+	UseAliasesInViewSettings = " SETTINGS asterisk_include_alias_columns=1"
 )
 
 var TimeoutExcludedRoutes = map[string]bool{

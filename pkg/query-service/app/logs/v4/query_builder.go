@@ -34,8 +34,6 @@ const (
 	BODY                         = "body"
 	DISTRIBUTED_LOGS_V2          = "distributed_logs_v2"
 	DISTRIBUTED_LOGS_V2_RESOURCE = "distributed_logs_v2_resource"
-	LOGS_VIEW                    = "logs_view"
-	LOGS_RESOURCE_VIEW           = "logs_resource_view"
 	DB_NAME                      = "signoz_logs"
 	NANOSECOND                   = 1000000000
 )
@@ -354,7 +352,7 @@ func generateAggregateClause(aggOp v3.AggregateOperator,
 }
 
 func logsView(tenant string, bucketStartSeconds, bucketEndSeconds int64) string {
-	return fmt.Sprintf("%s (tenant='%s', window_start='%d', window_end='%d')", LOGS_VIEW, tenant, bucketStartSeconds, bucketEndSeconds)
+	return fmt.Sprintf("%s (tenant='%s', window_start='%d', window_end='%d')", constants.TENANT_LOGS_VIEW, tenant, bucketStartSeconds, bucketEndSeconds)
 }
 
 func buildLogsQuery(panelType v3.PanelType, start, end, step int64, mq *v3.BuilderQuery, graphLimitQtype string, preferRPM bool) (string, error) {
