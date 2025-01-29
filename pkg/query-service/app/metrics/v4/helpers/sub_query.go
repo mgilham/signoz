@@ -274,7 +274,7 @@ func AggregationColumnForSamplesTable(start, end int64, mq *v3.BuilderQuery) str
 }
 
 // PrepareTimeseriesFilterQuery builds the sub-query to be used for filtering timeseries based on the search criteria
-func PrepareTimeseriesFilterQuery(start, end int64, mq *v3.BuilderQuery) (string, error) {
+func PrepareTimeseriesFilterQuery(tenant string, start, end int64, mq *v3.BuilderQuery) (string, error) {
 	var conditions []string
 	var fs *v3.FilterSet = mq.Filters
 	var groupTags []v3.AttributeKey = mq.GroupBy
@@ -283,7 +283,7 @@ func PrepareTimeseriesFilterQuery(start, end int64, mq *v3.BuilderQuery) (string
 	conditions = append(conditions, fmt.Sprintf("temporality = '%s'", mq.Temporality))
 
 	start, end, tableName := whichTSTableToUse(start, end, mq)
-	viewSql := timeSeriesTableToTenantView(tableName, "TODO", start, end)
+	viewSql := timeSeriesTableToTenantView(tableName, tenant, start, end)
 
 	// redundant with viewSql // conditions = append(conditions, fmt.Sprintf("unix_milli >= %d AND unix_milli < %d", start, end))
 

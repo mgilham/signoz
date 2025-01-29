@@ -44,7 +44,7 @@ var EvalFuncs = map[string]govaluate.ExpressionFunction{}
 
 type prepareTracesQueryFunc func(ctx context.Context, start, end int64, panelType v3.PanelType, bq *v3.BuilderQuery, options v3.QBOptions) (string, error)
 type prepareLogsQueryFunc func(ctx context.Context, start, end int64, queryType v3.QueryType, panelType v3.PanelType, bq *v3.BuilderQuery, options v3.QBOptions) (string, error)
-type prepareMetricQueryFunc func(start, end int64, queryType v3.QueryType, panelType v3.PanelType, bq *v3.BuilderQuery, options metricsV3.Options) (string, error)
+type prepareMetricQueryFunc func(ctx context.Context, start, end int64, queryType v3.QueryType, panelType v3.PanelType, bq *v3.BuilderQuery, options metricsV3.Options) (string, error)
 
 type QueryBuilder struct {
 	options      QueryBuilderOptions
@@ -237,7 +237,7 @@ func (qb *QueryBuilder) PrepareQueries(ctx context.Context, params *v3.QueryRang
 						queries[queryName] = queryString
 					}
 				case v3.DataSourceMetrics:
-					queryString, err := qb.options.BuildMetricQuery(start, end, compositeQuery.QueryType, compositeQuery.PanelType, query, metricsV3.Options{PreferRPM: PreferRPMFeatureEnabled})
+					queryString, err := qb.options.BuildMetricQuery(ctx, start, end, compositeQuery.QueryType, compositeQuery.PanelType, query, metricsV3.Options{PreferRPM: PreferRPMFeatureEnabled})
 					if err != nil {
 						return nil, err
 					}
