@@ -403,7 +403,7 @@ func (q *querier) runWindowBasedListQuery(ctx context.Context, params *v3.QueryR
 
 			params.CompositeQuery.BuilderQueries[qName].Offset = 0
 			params.CompositeQuery.BuilderQueries[qName].Limit = tracesLimit
-			queries, err := q.builder.PrepareQueries(nil, params)
+			queries, err := q.builder.PrepareQueries(ctx, params)
 			if err != nil {
 				return nil, nil, err
 			}

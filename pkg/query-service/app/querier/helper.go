@@ -172,6 +172,7 @@ func (q *querier) runBuilderQuery(
 		// for ts query with group by and limit form two queries
 		if params.CompositeQuery.PanelType == v3.PanelTypeGraph && builderQuery.Limit > 0 && len(builderQuery.GroupBy) > 0 {
 			limitQuery, err := tracesQueryBuilder(
+				ctx,
 				start,
 				end,
 				params.CompositeQuery.PanelType,
@@ -183,6 +184,7 @@ func (q *querier) runBuilderQuery(
 				return
 			}
 			placeholderQuery, err := tracesQueryBuilder(
+				ctx,
 				start,
 				end,
 				params.CompositeQuery.PanelType,
@@ -196,6 +198,7 @@ func (q *querier) runBuilderQuery(
 			query = strings.Replace(placeholderQuery, "#LIMIT_PLACEHOLDER", limitQuery, 1)
 		} else {
 			query, err = tracesQueryBuilder(
+				ctx,
 				start,
 				end,
 				params.CompositeQuery.PanelType,

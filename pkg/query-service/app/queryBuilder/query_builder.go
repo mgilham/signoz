@@ -42,7 +42,7 @@ var SupportedFunctions = []string{
 
 var EvalFuncs = map[string]govaluate.ExpressionFunction{}
 
-type prepareTracesQueryFunc func(start, end int64, panelType v3.PanelType, bq *v3.BuilderQuery, options v3.QBOptions) (string, error)
+type prepareTracesQueryFunc func(ctx context.Context, start, end int64, panelType v3.PanelType, bq *v3.BuilderQuery, options v3.QBOptions) (string, error)
 type prepareLogsQueryFunc func(ctx context.Context, start, end int64, queryType v3.QueryType, panelType v3.PanelType, bq *v3.BuilderQuery, options v3.QBOptions) (string, error)
 type prepareMetricQueryFunc func(start, end int64, queryType v3.QueryType, panelType v3.PanelType, bq *v3.BuilderQuery, options metricsV3.Options) (string, error)
 
@@ -196,12 +196,12 @@ func (qb *QueryBuilder) PrepareQueries(ctx context.Context, params *v3.QueryRang
 				case v3.DataSourceTraces:
 					// for ts query with group by and limit form two queries
 					if compositeQuery.PanelType == v3.PanelTypeGraph && query.Limit > 0 && len(query.GroupBy) > 0 {
-						limitQuery, err := qb.options.BuildTraceQuery(start, end, compositeQuery.PanelType, query,
+						limitQuery, err := qb.options.BuildTraceQuery(ctx, start, end, compositeQuery.PanelType, query,
 							v3.QBOptions{GraphLimitQtype: constants.FirstQueryGraphLimit, PreferRPM: PreferRPMFeatureEnabled})
 						if err != nil {
 							return nil, err
 						}
-						placeholderQuery, err := qb.options.BuildTraceQuery(start, end, compositeQuery.PanelType,
+						placeholderQuery, err := qb.options.BuildTraceQuery(ctx, start, end, compositeQuery.PanelType,
 							query, v3.QBOptions{GraphLimitQtype: constants.SecondQueryGraphLimit, PreferRPM: PreferRPMFeatureEnabled})
 						if err != nil {
 							return nil, err
@@ -209,7 +209,7 @@ func (qb *QueryBuilder) PrepareQueries(ctx context.Context, params *v3.QueryRang
 						query := fmt.Sprintf(placeholderQuery, limitQuery)
 						queries[queryName] = query
 					} else {
-						queryString, err := qb.options.BuildTraceQuery(start, end, compositeQuery.PanelType,
+						queryString, err := qb.options.BuildTraceQuery(ctx, start, end, compositeQuery.PanelType,
 							query, v3.QBOptions{PreferRPM: PreferRPMFeatureEnabled, GraphLimitQtype: ""})
 						if err != nil {
 							return nil, err
