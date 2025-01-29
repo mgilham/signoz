@@ -19,7 +19,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func prepareLogsQuery(_ context.Context,
+func prepareLogsQuery(ctx context.Context,
 	useLogsNewSchema bool,
 	start,
 	end int64,
@@ -40,6 +40,7 @@ func prepareLogsQuery(_ context.Context,
 	// for ts query with limit replace it as it is already formed
 	if params.CompositeQuery.PanelType == v3.PanelTypeGraph && builderQuery.Limit > 0 && len(builderQuery.GroupBy) > 0 {
 		limitQuery, err := logsQueryBuilder(
+			ctx,
 			start,
 			end,
 			params.CompositeQuery.QueryType,
@@ -51,6 +52,7 @@ func prepareLogsQuery(_ context.Context,
 			return query, err
 		}
 		placeholderQuery, err := logsQueryBuilder(
+			ctx,
 			start,
 			end,
 			params.CompositeQuery.QueryType,
@@ -66,6 +68,7 @@ func prepareLogsQuery(_ context.Context,
 	}
 
 	query, err := logsQueryBuilder(
+		ctx,
 		start,
 		end,
 		params.CompositeQuery.QueryType,

@@ -4945,7 +4945,7 @@ func (aH *APIHandler) liveTailLogsV2(w http.ResponseWriter, r *http.Request) {
 			logsv3.Enrich(queryRangeParams, fields)
 		}
 
-		queryString, err = aH.queryBuilder.PrepareLiveTailQuery(queryRangeParams)
+		queryString, err = aH.queryBuilder.PrepareLiveTailQuery(r.Context(), queryRangeParams)
 		if err != nil {
 			RespondError(w, &model.ApiError{Typ: model.ErrorBadData, Err: err}, nil)
 			return
@@ -5031,7 +5031,7 @@ func (aH *APIHandler) liveTailLogs(w http.ResponseWriter, r *http.Request) {
 			logsv3.Enrich(queryRangeParams, fields)
 		}
 
-		queryString, err = aH.queryBuilder.PrepareLiveTailQuery(queryRangeParams)
+		queryString, err = aH.queryBuilder.PrepareLiveTailQuery(r.Context(), queryRangeParams)
 		if err != nil {
 			RespondError(w, &model.ApiError{Typ: model.ErrorBadData, Err: err}, nil)
 			return

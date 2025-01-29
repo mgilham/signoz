@@ -21,6 +21,7 @@ const (
 type ContextKey string
 
 const ContextUserKey ContextKey = "user"
+const ContextTenantKey ContextKey = "tenant"
 
 var ConfigSignozIo = "https://config.signoz.io/api/v1"
 

@@ -311,6 +311,12 @@ func (s *Server) createPublicServer(api *APIHandler) (*http.Server, error) {
 			return nil, model.UnauthorizedError(errors.New("orgId is missing in the claims"))
 		}
 
+		org, apiErr := dao.DB().GetOrg(context.TODO(), user.User.OrgId) // could easily be cached to avoid per-request sqllite overhead
+		if apiErr != nil {
+			return nil, apiErr.Err
+		}
+		user.Organization = org.Name
+
 		return user, nil
 	}
 	am := NewAuthMiddleware(getUserFromRequest)

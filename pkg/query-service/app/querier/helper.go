@@ -19,7 +19,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func prepareLogsQuery(_ context.Context,
+func prepareLogsQuery(ctx context.Context,
 	useLogsNewSchema bool,
 	start,
 	end int64,
@@ -41,6 +41,7 @@ func prepareLogsQuery(_ context.Context,
 	// for ts query with limit replace it as it is already formed
 	if params.CompositeQuery.PanelType == v3.PanelTypeGraph && builderQuery.Limit > 0 && len(builderQuery.GroupBy) > 0 {
 		limitQuery, err := logsQueryBuilder(
+			ctx,
 			start,
 			end,
 			params.CompositeQuery.QueryType,
@@ -52,6 +53,7 @@ func prepareLogsQuery(_ context.Context,
 			return query, err
 		}
 		placeholderQuery, err := logsQueryBuilder(
+			ctx,
 			start,
 			end,
 			params.CompositeQuery.QueryType,
@@ -67,6 +69,7 @@ func prepareLogsQuery(_ context.Context,
 	}
 
 	query, err := logsQueryBuilder(
+		ctx,
 		start,
 		end,
 		params.CompositeQuery.QueryType,
@@ -286,7 +289,7 @@ func (q *querier) runBuilderExpression(
 
 	queryName := builderQuery.QueryName
 
-	queries, err := q.builder.PrepareQueries(params)
+	queries, err := q.builder.PrepareQueries(ctx, params)
 	if err != nil {
 		ch <- channelResult{Err: err, Name: queryName, Query: "", Series: nil}
 		return
@@ -306,7 +309,7 @@ func (q *querier) runBuilderExpression(
 	zap.L().Info("cache misses for expression query", zap.Any("misses", misses))
 	missedSeries := make([]querycache.CachedSeriesData, 0)
 	for _, miss := range misses {
-		missQueries, _ := q.builder.PrepareQueries(&v3.QueryRangeParamsV3{
+		missQueries, _ := q.builder.PrepareQueries(ctx, &v3.QueryRangeParamsV3{
 			Start:          miss.Start,
 			End:            miss.End,
 			Step:           params.Step,

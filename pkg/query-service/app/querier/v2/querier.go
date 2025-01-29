@@ -349,7 +349,7 @@ func (q *querier) runWindowBasedListQuery(ctx context.Context, params *v3.QueryR
 		// appending the filter to get the next set of data
 		if params.CompositeQuery.BuilderQueries[qName].DataSource == v3.DataSourceLogs {
 			params.CompositeQuery.BuilderQueries[qName].PageSize = pageSize - uint64(len(data))
-			queries, err := q.builder.PrepareQueries(params)
+			queries, err := q.builder.PrepareQueries(ctx, params)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -405,7 +405,7 @@ func (q *querier) runWindowBasedListQuery(ctx context.Context, params *v3.QueryR
 
 			params.CompositeQuery.BuilderQueries[qName].Offset = 0
 			params.CompositeQuery.BuilderQueries[qName].Limit = tracesLimit
-			queries, err := q.builder.PrepareQueries(params)
+			queries, err := q.builder.PrepareQueries(ctx, params)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -470,7 +470,7 @@ func (q *querier) runBuilderListQueries(ctx context.Context, params *v3.QueryRan
 	queries := make(map[string]string)
 	var err error
 	if params.CompositeQuery.QueryType == v3.QueryTypeBuilder {
-		queries, err = q.builder.PrepareQueries(params)
+		queries, err = q.builder.PrepareQueries(ctx, params)
 	} else if params.CompositeQuery.QueryType == v3.QueryTypeClickHouseSQL {
 		for name, chQuery := range params.CompositeQuery.ClickHouseQueries {
 			queries[name] = chQuery.Query
