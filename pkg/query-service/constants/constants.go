@@ -1,6 +1,7 @@
 package constants
 
 import (
+	chprom "github.com/prometheus/prometheus/storage/clickhouse"
 	"maps"
 	"os"
 	"strconv"
@@ -21,7 +22,8 @@ const (
 type ContextKey string
 
 const ContextUserKey ContextKey = "user"
-const ContextTenantKey ContextKey = "tenant"
+
+const ContextTenantKey = chprom.ContextTenantKey
 
 var ConfigSignozIo = "https://config.signoz.io/api/v1"
 
