@@ -235,9 +235,8 @@ func CreateDashboard(ctx context.Context, data map[string]interface{}, fm interf
 }
 
 func GetDashboards(ctx context.Context) ([]Dashboard, *model.ApiError) {
-
 	dashboards := []Dashboard{}
-	query := `SELECT * FROM dashboards`
+	query := `SELECT * FROM dashboards WHERE ` + common.TenantSqlPredicate(ctx)
 
 	err := db.Select(&dashboards, query)
 	if err != nil {
@@ -261,7 +260,7 @@ func DeleteDashboard(ctx context.Context, uuid string, fm interfaces.FeatureLook
 		}
 	}
 
-	query := `DELETE FROM dashboards WHERE uuid=?`
+	query := `DELETE FROM dashboards WHERE uuid=? AND ` + common.TenantSqlPredicate(ctx)
 
 	result, err := db.Exec(query, uuid)
 	if err != nil {
@@ -282,7 +281,7 @@ func DeleteDashboard(ctx context.Context, uuid string, fm interfaces.FeatureLook
 func GetDashboard(ctx context.Context, uuid string) (*Dashboard, *model.ApiError) {
 
 	dashboard := Dashboard{}
-	query := `SELECT * FROM dashboards WHERE uuid=?`
+	query := `SELECT * FROM dashboards WHERE uuid=? AND ` + common.TenantSqlPredicate(ctx)
 
 	err := db.Get(&dashboard, query, uuid)
 	if err != nil {
@@ -332,7 +331,7 @@ func UpdateDashboard(ctx context.Context, uuid string, data map[string]interface
 	dashboard.UpdateBy = &userEmail
 	dashboard.Data = data
 
-	_, err = db.Exec("UPDATE dashboards SET updated_at=$1, updated_by=$2, data=$3 WHERE uuid=$4;",
+	_, err = db.Exec("UPDATE dashboards SET updated_at=$1, updated_by=$2, data=$3 WHERE uuid=$4 AND "+common.TenantSqlPredicate(ctx),
 		dashboard.UpdatedAt, userEmail, mapData, dashboard.Uuid)
 
 	if err != nil {
@@ -345,9 +344,9 @@ func UpdateDashboard(ctx context.Context, uuid string, data map[string]interface
 func LockUnlockDashboard(ctx context.Context, uuid string, lock bool) *model.ApiError {
 	var query string
 	if lock {
-		query = `UPDATE dashboards SET locked=1 WHERE uuid=?;`
+		query = `UPDATE dashboards SET locked=1 WHERE uuid=? AND ` + common.TenantSqlPredicate(ctx)
 	} else {
-		query = `UPDATE dashboards SET locked=0 WHERE uuid=?;`
+		query = `UPDATE dashboards SET locked=0 WHERE uuid=? AND ` + common.TenantSqlPredicate(ctx)
 	}
 
 	_, err := db.Exec(query, uuid)
