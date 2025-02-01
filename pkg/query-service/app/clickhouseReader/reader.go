@@ -111,6 +111,7 @@ var (
 // SpanWriter for reading spans from ClickHouse
 type ClickHouseReader struct {
 	db                      clickhouse.Conn
+	tenantDb                clickhouse.Conn
 	localDB                 *sqlx.DB
 	TraceDB                 string
 	operationsTable         string
@@ -180,11 +181,21 @@ func NewReader(
 		zap.L().Fatal("failed to initialize ClickHouse", zap.Error(err))
 	}
 
-	return NewReaderFromClickhouseConnection(db, options, localDB, configFile, featureFlag, cluster, useLogsNewSchema, useTraceNewSchema)
+	var tenantDb driver.Conn
+	if tenantDatasource := os.Getenv("TenantClickHouseUrl"); tenantDatasource != "" {
+		options := NewOptions(tenantDatasource, maxIdleConns, maxOpenConns, dialTimeout, primaryNamespace, archiveNamespace)
+		tenantDb, err = initialize(options)
+		if err != nil {
+			zap.L().Fatal("failed to initialize ClickHouse", zap.Error(err))
+		}
+	}
+
+	return NewReaderFromClickhouseConnection(db, tenantDb, options, localDB, configFile, featureFlag, cluster, useLogsNewSchema, useTraceNewSchema)
 }
 
 func NewReaderFromClickhouseConnection(
 	db driver.Conn,
+	tenantDb driver.Conn,
 	options *Options,
 	localDB *sqlx.DB,
 	configFile string,
@@ -222,6 +233,21 @@ func NewReaderFromClickhouseConnection(
 		},
 	}
 
+	var tenantWrap clickhouse.Conn
+	if tenantDb != nil {
+		tenantWrap = clickhouseConnWrapper{
+			conn: tenantDb,
+			settings: ClickhouseQuerySettings{
+				MaxExecutionTime:                    os.Getenv("ClickHouseMaxExecutionTime"),
+				MaxExecutionTimeLeaf:                os.Getenv("ClickHouseMaxExecutionTimeLeaf"),
+				TimeoutBeforeCheckingExecutionSpeed: os.Getenv("ClickHouseTimeoutBeforeCheckingExecutionSpeed"),
+				MaxBytesToRead:                      os.Getenv("ClickHouseMaxBytesToRead"),
+				OptimizeReadInOrderRegex:            os.Getenv("ClickHouseOptimizeReadInOrderRegex"),
+				OptimizeReadInOrderRegexCompiled:    regexCompiled,
+			},
+		}
+	}
+
 	logsTableName := options.primary.LogsTable
 	logsLocalTableName := options.primary.LogsLocalTable
 	if useLogsNewSchema {
@@ -238,6 +264,7 @@ func NewReaderFromClickhouseConnection(
 
 	return &ClickHouseReader{
 		db:                      wrap,
+		tenantDb:                tenantWrap,
 		localDB:                 localDB,
 		TraceDB:                 options.primary.TraceDB,
 		alertManager:            alertManager,
@@ -4136,8 +4163,51 @@ func logCommentKVs(ctx context.Context) map[string]string {
 	return logCommentKVs
 }
 
+var tenantRe = regexp.MustCompile(`^tenant\s*=`)
+
+func imputeTenant(query string, tenant string, tenantIdx int) string {
+	// query = "SELECT whatever FROM my_tenant_view (tenant = 'mytenant') WHERE ..."
+	start := query[tenantIdx:] // 	tenant = 'mytenant') WHERE ...
+
+	if !tenantRe.MatchString(start) {
+		// defeat comment hacking
+		equalsIdx := strings.IndexRune(start, '=')
+		if equalsIdx > -1 {
+			sub := start[:equalsIdx]
+			if strings.Contains(sub, "/*") || strings.Contains(sub, "--") {
+				return query[:tenantIdx] + "invalid"
+			}
+		}
+		// string "tenant" not being used to designate a view parameter in this case
+		return query
+	}
+
+	firstQuoteStartIdx := strings.IndexRune(start, '\'')
+	firstQuoteStart := start[firstQuoteStartIdx:]                                // 	'mytenant') WHERE ...
+	suffix := firstQuoteStart[1:][strings.IndexRune(firstQuoteStart[1:], '\''):] //  ') WHERE ...
+	return query[:tenantIdx] + "tenant='" + tenant + suffix
+}
+
+func imputeTenantInQuery(query string, tenant string) string {
+	// this parsing is not very general and could be improved upon...
+	lastTenantIdx := -1
+	tenantIdx := strings.Index(query, "tenant")
+	for lastTenantIdx != tenantIdx {
+		query = imputeTenant(query, tenant, tenantIdx)
+		lastTenantIdx = tenantIdx
+		tenantIdx = tenantIdx + 1 + strings.Index(query[tenantIdx+1:], "tenant") // finds the next occurrence of "tenant"
+	}
+	return query
+}
+
 // GetTimeSeriesResultV3 runs the query and returns list of time series
 func (r *ClickHouseReader) GetTimeSeriesResultV3(ctx context.Context, query string) ([]*v3.Series, error) {
+	tenant := ctx.Value(constants.ContextTenantKey).(string)
+	query = imputeTenantInQuery(query, tenant)
+	db := r.db
+	if r.tenantDb != nil {
+		db = r.tenantDb
+	}
 
 	ctxArgs := map[string]interface{}{"query": query}
 	for k, v := range logCommentKVs(ctx) {
@@ -4170,7 +4240,7 @@ func (r *ClickHouseReader) GetTimeSeriesResultV3(ctx context.Context, query stri
 		}
 	}
 
-	rows, err := r.db.Query(ctx, query)
+	rows, err := db.Query(ctx, query)
 
 	if err != nil {
 		zap.L().Error("error while reading time series result", zap.Error(err))
@@ -4434,7 +4504,7 @@ func (r *ClickHouseReader) GetTraceAggregateAttributes(ctx context.Context, req 
 
 func (r *ClickHouseReader) GetTraceAttributeKeys(ctx context.Context, req *v3.FilterAttributeKeyRequest) (*v3.FilterAttributeKeyResponse, error) {
 	tenant := ctx.Value(constants.ContextTenantKey).(string)
-	
+
 	var query string
 	var err error
 	var rows driver.Rows
