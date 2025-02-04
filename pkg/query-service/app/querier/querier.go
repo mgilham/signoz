@@ -165,6 +165,11 @@ func (q *querier) runBuilderQueries(ctx context.Context, params *v3.QueryRangePa
 
 	cacheKeys := q.keyGenerator.GenerateKeys(params)
 
+	tenant := ctx.Value(constants.ContextTenantKey).(string)
+	for queryName, key := range cacheKeys {
+		cacheKeys[queryName] = fmt.Sprintf("tenant=%s&%s", tenant, key)
+	}
+
 	ch := make(chan channelResult, len(params.CompositeQuery.BuilderQueries))
 	var wg sync.WaitGroup
 
@@ -211,6 +216,11 @@ func (q *querier) runPromQueries(ctx context.Context, params *v3.QueryRangeParam
 	channelResults := make(chan channelResult, len(params.CompositeQuery.PromQueries))
 	var wg sync.WaitGroup
 	cacheKeys := q.keyGenerator.GenerateKeys(params)
+
+	tenant := ctx.Value(constants.ContextTenantKey).(string)
+	for queryName, key := range cacheKeys {
+		cacheKeys[queryName] = fmt.Sprintf("tenant=%s&%s", tenant, key)
+	}
 
 	for queryName, promQuery := range params.CompositeQuery.PromQueries {
 		if promQuery.Disabled {
