@@ -1244,6 +1244,8 @@ func (aH *APIHandler) testRule(w http.ResponseWriter, r *http.Request) {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Minute)
 	defer cancel()
+	tenant := r.Context().Value(constants.ContextTenantKey).(string)
+	ctx = context.WithValue(ctx, constants.ContextTenantKey, tenant)
 
 	alertCount, apiRrr := aH.ruleManager.TestNotification(ctx, string(body))
 	if apiRrr != nil {
@@ -1319,7 +1321,7 @@ func (aH *APIHandler) editRule(w http.ResponseWriter, r *http.Request) {
 
 func (aH *APIHandler) getChannel(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	channel, apiErrorObj := aH.ruleManager.RuleDB().GetChannel(id)
+	channel, apiErrorObj := aH.ruleManager.RuleDB().GetChannel(r.Context(), id)
 	if apiErrorObj != nil {
 		RespondError(w, apiErrorObj, nil)
 		return
@@ -1329,7 +1331,7 @@ func (aH *APIHandler) getChannel(w http.ResponseWriter, r *http.Request) {
 
 func (aH *APIHandler) deleteChannel(w http.ResponseWriter, r *http.Request) {
 	id := mux.Vars(r)["id"]
-	apiErrorObj := aH.ruleManager.RuleDB().DeleteChannel(id)
+	apiErrorObj := aH.ruleManager.RuleDB().DeleteChannel(r.Context(), id)
 	if apiErrorObj != nil {
 		RespondError(w, apiErrorObj, nil)
 		return
@@ -1338,7 +1340,8 @@ func (aH *APIHandler) deleteChannel(w http.ResponseWriter, r *http.Request) {
 }
 
 func (aH *APIHandler) listChannels(w http.ResponseWriter, r *http.Request) {
-	channels, apiErrorObj := aH.ruleManager.RuleDB().GetChannels()
+	tenant := r.Context().Value(constants.ContextTenantKey).(string)
+	channels, apiErrorObj := aH.ruleManager.RuleDB().GetChannels(r.Context(), tenant)
 	if apiErrorObj != nil {
 		RespondError(w, apiErrorObj, nil)
 		return
@@ -1391,7 +1394,7 @@ func (aH *APIHandler) editChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, apiErrorObj := aH.ruleManager.RuleDB().EditChannel(receiver, id)
+	_, apiErrorObj := aH.ruleManager.RuleDB().EditChannel(r.Context(), receiver, id)
 
 	if apiErrorObj != nil {
 		RespondError(w, apiErrorObj, nil)
@@ -1419,7 +1422,7 @@ func (aH *APIHandler) createChannel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, apiErrorObj := aH.ruleManager.RuleDB().CreateChannel(receiver)
+	_, apiErrorObj := aH.ruleManager.RuleDB().CreateChannel(r.Context(), receiver)
 
 	if apiErrorObj != nil {
 		RespondError(w, apiErrorObj, nil)

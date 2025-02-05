@@ -134,6 +134,13 @@ func InitDB(dataSourceName string) (*sqlx.DB, error) {
 		return nil, fmt.Errorf("error in adding column updated_by to rules table: %s", err.Error())
 	}
 
+	createdBy = `ALTER TABLE notification_channels ADD COLUMN created_by TEXT;`
+	_, err = db.Exec(createdBy)
+	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
+		return nil, fmt.Errorf("error in adding column created_by to notification_channels table: %s", err.Error())
+	}
+	// TODO: de-uniqueify 'name' column for full multi-tenant
+
 	createdBy = `ALTER TABLE dashboards ADD COLUMN created_by TEXT;`
 	_, err = db.Exec(createdBy)
 	if err != nil && !strings.Contains(err.Error(), "duplicate column name") {
