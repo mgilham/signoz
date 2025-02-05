@@ -150,6 +150,13 @@ var DEFAULT_FEATURE_SET = model.FeatureSet{
 		UsageLimit: -1,
 		Route:      "",
 	},
+	model.Feature{
+		Name:       model.AlertChannelWebhook,
+		Active:     true,
+		Usage:      0,
+		UsageLimit: -1,
+		Route:      "",
+	},
 }
 
 func GetContextTimeout() time.Duration {
