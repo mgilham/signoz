@@ -1938,10 +1938,15 @@ func (aH *APIHandler) getDisks(w http.ResponseWriter, r *http.Request) {
 
 func (aH *APIHandler) getVersion(w http.ResponseWriter, r *http.Request) {
 	version := version.GetVersion()
+	var headerEmail string
+	if user := auth.GetUserFromHeader(r); user != nil {
+		headerEmail = user.Email
+	}
 	versionResponse := model.GetVersionResponse{
 		Version:        version,
 		EE:             "Y",
 		SetupCompleted: aH.SetupCompleted,
+		HeaderEmail:    headerEmail,
 	}
 
 	aH.WriteJSON(w, r, versionResponse)
@@ -2143,7 +2148,7 @@ func (aH *APIHandler) loginUser(w http.ResponseWriter, r *http.Request) {
 	// 	req.RefreshToken = c.Value
 	// }
 
-	resp, err := auth.Login(context.Background(), req)
+	resp, err := auth.Login(context.Background(), req, auth.GetUserFromHeader(r))
 	if aH.HandleError(w, err, http.StatusUnauthorized) {
 		return
 	}
